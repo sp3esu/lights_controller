@@ -1,0 +1,5 @@
+{
+    "name": "protocol",
+    "version": "1.0.0",
+    "description": "Shared ESP-NOW protocol for light controller"
+}
