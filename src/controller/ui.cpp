@@ -11,7 +11,7 @@
 // ON colors per light
 #define COLOR_FOG_ON     lv_color_hex(0xFFB84D)  // amber
 #define COLOR_LOW_ON     lv_color_hex(0x44DD44)  // green
-#define COLOR_HIGH_ON    lv_color_hex(0x88CCFF)  // light blue
+#define COLOR_HIGH_ON    lv_color_hex(0x4488FF)  // blue
 #define COLOR_BAR_ON     lv_color_hex(0xFFFFFF)  // white
 #define COLOR_HAZARD_ON  lv_color_hex(0xFF4444)  // red
 #define COLOR_SETTINGS   lv_color_hex(0x888888)  // gray (settings button)
@@ -22,6 +22,11 @@
 #define NUM_BUTTONS 6
 // Settings button index
 #define IDX_SETTINGS 5
+// Light button indices
+#define IDX_LOW_BEAM  0
+#define IDX_HIGH_BEAM 3
+// Disabled icon color
+#define COLOR_DISABLED lv_color_hex(0x333333)
 
 // Light button info
 struct LightBtnInfo {
@@ -67,6 +72,29 @@ static void apply_btn_style(int idx, bool on) {
     else    lv_obj_clear_state(btn, LV_STATE_CHECKED);
 }
 
+static void update_high_beam_enabled() {
+    bool low_on = lv_obj_has_state(btn_objs[IDX_LOW_BEAM], LV_STATE_CHECKED);
+    lv_obj_t *hb_btn = btn_objs[IDX_HIGH_BEAM];
+    lv_obj_t *hb_icon = btn_icons[IDX_HIGH_BEAM];
+
+    if (!low_on) {
+        // Disable high beam: not clickable, dark gray icon, force OFF
+        lv_obj_clear_flag(hb_btn, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_clear_state(hb_btn, LV_STATE_CHECKED);
+        lv_obj_set_style_bg_opa(hb_btn, LV_OPA_TRANSP, LV_PART_MAIN);
+        lv_obj_set_style_img_recolor(hb_icon, COLOR_DISABLED, LV_PART_MAIN);
+    } else {
+        // Enable high beam: restore clickable, restore color for current state
+        lv_obj_add_flag(hb_btn, LV_OBJ_FLAG_CLICKABLE);
+        bool hb_on = lv_obj_has_state(hb_btn, LV_STATE_CHECKED);
+        if (hb_on) {
+            lv_obj_set_style_img_recolor(hb_icon, COLOR_BG, LV_PART_MAIN);
+        } else {
+            lv_obj_set_style_img_recolor(hb_icon, btn_info[IDX_HIGH_BEAM].on_color, LV_PART_MAIN);
+        }
+    }
+}
+
 static void btn_event_cb(lv_event_t *e) {
     if (updating_ui) return;
 
@@ -74,12 +102,34 @@ static void btn_event_cb(lv_event_t *e) {
     int idx = (int)(intptr_t)lv_event_get_user_data(e);
     bool checked = lv_obj_has_state(btn, LV_STATE_CHECKED);
 
+    // Block high beam if low beam is off
+    if (idx == IDX_HIGH_BEAM && !lv_obj_has_state(btn_objs[IDX_LOW_BEAM], LV_STATE_CHECKED)) {
+        lv_obj_clear_state(btn, LV_STATE_CHECKED);
+        apply_btn_style(idx, false);
+        return;
+    }
+
     // Optimistic UI update
     apply_btn_style(idx, checked);
 
     // In test mode, just toggle locally; otherwise send via ESP-NOW
     if (!test_mode) {
         espnow_tx_toggle_light(btn_info[idx].light_bit);
+    }
+
+    // Low beam toggled OFF → also turn off high beam
+    if (idx == IDX_LOW_BEAM && !checked) {
+        if (lv_obj_has_state(btn_objs[IDX_HIGH_BEAM], LV_STATE_CHECKED)) {
+            apply_btn_style(IDX_HIGH_BEAM, false);
+            if (!test_mode) {
+                espnow_tx_send_state(LIGHT_HIGH_BEAM, 0);
+            }
+        }
+    }
+
+    // Update high beam enabled/disabled state after any low beam change
+    if (idx == IDX_LOW_BEAM) {
+        update_high_beam_enabled();
     }
 }
 
@@ -218,6 +268,9 @@ void ui_init() {
     }
     create_settings_button(grid);
 
+    // High beam starts disabled (low beam is off)
+    update_high_beam_enabled();
+
     // Pairing screen
     scr_pairing = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(scr_pairing, COLOR_BG, LV_PART_MAIN);
@@ -252,6 +305,7 @@ void ui_set_light_state(uint8_t state) {
         bool on = (state & btn_info[i].light_bit) != 0;
         apply_btn_style(i, on);
     }
+    update_high_beam_enabled();
     updating_ui = false;
 }
 
