@@ -1,2 +1,10 @@
 .pio
 .vscode
+
+# KiCad local files
+hardware/fp-info-cache
+hardware/*-backups/
+hardware/*.kicad_prl
+
+# Python virtual environments
+scripts/.venv/
