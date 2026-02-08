@@ -7,9 +7,6 @@
 
 // Color definitions
 #define COLOR_BG        lv_color_hex(0x0F0F1A)
-#define COLOR_BTN_OFF   lv_color_hex(0x2D2D3D)
-#define COLOR_BTN_PRESS lv_color_hex(0x3D3D4D)
-#define COLOR_TEXT_OFF   lv_color_hex(0x808090)
 
 // ON colors per light
 #define COLOR_FOG_ON     lv_color_hex(0xFFB84D)  // amber
@@ -43,24 +40,20 @@ static bool test_mode = false;    // local-only toggle without ESP-NOW
 
 static void apply_btn_style(int idx, bool on) {
     lv_obj_t *btn = btn_objs[idx];
-    lv_color_t bg = on ? btn_info[idx].on_color : COLOR_BTN_OFF;
-    lv_color_t icon_col = on ? COLOR_BG : COLOR_TEXT_OFF;
-
-    // Darken ON color for button background
     if (on) {
-        bg = lv_color_darken(btn_info[idx].on_color, LV_OPA_40);
+        // ON: colored background, dark icon
+        lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, LV_PART_MAIN);
+        lv_obj_set_style_bg_color(btn, btn_info[idx].on_color, LV_PART_MAIN);
+        lv_obj_set_style_img_recolor(btn_icons[idx], COLOR_BG, LV_PART_MAIN);
+    } else {
+        // OFF: transparent background, colored icon
+        lv_obj_set_style_bg_opa(btn, LV_OPA_TRANSP, LV_PART_MAIN);
+        lv_obj_set_style_img_recolor(btn_icons[idx], btn_info[idx].on_color, LV_PART_MAIN);
     }
-
-    lv_obj_set_style_bg_color(btn, bg, LV_PART_MAIN);
-    lv_obj_set_style_img_recolor(btn_icons[idx], icon_col, LV_PART_MAIN);
     lv_obj_set_style_img_recolor_opa(btn_icons[idx], LV_OPA_COVER, LV_PART_MAIN);
 
-    // Set checked state to match
-    if (on) {
-        lv_obj_add_state(btn, LV_STATE_CHECKED);
-    } else {
-        lv_obj_clear_state(btn, LV_STATE_CHECKED);
-    }
+    if (on) lv_obj_add_state(btn, LV_STATE_CHECKED);
+    else    lv_obj_clear_state(btn, LV_STATE_CHECKED);
 }
 
 static void btn_event_cb(lv_event_t *e) {
@@ -83,24 +76,24 @@ static lv_obj_t *create_light_button(lv_obj_t *parent, int idx) {
     lv_obj_t *btn = lv_obj_create(parent);
     lv_obj_remove_style_all(btn);
     lv_obj_set_size(btn, 154, 80);
-    lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(btn, COLOR_BTN_OFF, LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(btn, LV_OPA_TRANSP, LV_PART_MAIN);
     lv_obj_set_style_radius(btn, 12, LV_PART_MAIN);
 
     // Checkable toggle
     lv_obj_add_flag(btn, LV_OBJ_FLAG_CHECKABLE | LV_OBJ_FLAG_CLICKABLE);
 
-    // Pressed style
-    lv_obj_set_style_bg_color(btn, COLOR_BTN_PRESS, (lv_style_selector_t)(LV_PART_MAIN | LV_STATE_PRESSED));
+    // Pressed feedback: semi-transparent white overlay (works for both ON and OFF)
+    lv_obj_set_style_bg_opa(btn, LV_OPA_30, (lv_style_selector_t)(LV_PART_MAIN | LV_STATE_PRESSED));
+    lv_obj_set_style_bg_color(btn, lv_color_white(), (lv_style_selector_t)(LV_PART_MAIN | LV_STATE_PRESSED));
 
     // Center content
     lv_obj_set_flex_flow(btn, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    // Icon
+    // Icon — starts with light's signature color (OFF state)
     lv_obj_t *img = lv_img_create(btn);
     lv_img_set_src(img, btn_info[idx].icon);
-    lv_obj_set_style_img_recolor(img, COLOR_TEXT_OFF, LV_PART_MAIN);
+    lv_obj_set_style_img_recolor(img, btn_info[idx].on_color, LV_PART_MAIN);
     lv_obj_set_style_img_recolor_opa(img, LV_OPA_COVER, LV_PART_MAIN);
     lv_obj_clear_flag(img, LV_OBJ_FLAG_CLICKABLE);
     btn_icons[idx] = img;
