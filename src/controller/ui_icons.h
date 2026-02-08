@@ -10,3 +10,5 @@ extern const lv_img_dsc_t icon_fog;
 extern const lv_img_dsc_t icon_low_beam;
 extern const lv_img_dsc_t icon_high_beam;
 extern const lv_img_dsc_t icon_light_bar;
+extern const lv_img_dsc_t icon_hazard;
+extern const lv_img_dsc_t icon_settings;

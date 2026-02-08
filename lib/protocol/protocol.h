@@ -11,7 +11,8 @@
 #define LIGHT_LOW_BEAM (1 << 1)
 #define LIGHT_HIGH_BEAM (1 << 2)
 #define LIGHT_BAR      (1 << 3)
-#define LIGHT_ALL      (LIGHT_FOG | LIGHT_LOW_BEAM | LIGHT_HIGH_BEAM | LIGHT_BAR)
+#define LIGHT_HAZARD   (1 << 4)
+#define LIGHT_ALL      (LIGHT_FOG | LIGHT_LOW_BEAM | LIGHT_HIGH_BEAM | LIGHT_BAR | LIGHT_HAZARD)
 
 // Message types
 enum MsgType : uint8_t {

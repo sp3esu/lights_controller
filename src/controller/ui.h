@@ -16,3 +16,6 @@ void ui_show_pairing();
 
 // Show main control screen
 void ui_show_main();
+
+// Show settings screen
+void ui_show_settings();

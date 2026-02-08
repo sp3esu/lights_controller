@@ -7,6 +7,7 @@
 #define PIN_LOW_BEAM  17
 #define PIN_HIGH_BEAM 18
 #define PIN_LIGHT_BAR 19
+#define PIN_HAZARD    21
 #define PIN_STATUS_LED 2
 
 void lights_init();

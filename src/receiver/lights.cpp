@@ -13,6 +13,7 @@ static const struct {
     { LIGHT_LOW_BEAM,  PIN_LOW_BEAM },
     { LIGHT_HIGH_BEAM, PIN_HIGH_BEAM },
     { LIGHT_BAR,       PIN_LIGHT_BAR },
+    { LIGHT_HAZARD,    PIN_HAZARD },
 };
 
 void lights_init() {
