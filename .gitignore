@@ -9,3 +9,12 @@ hardware/*.kicad_prl
 # Python virtual environments
 scripts/.venv/
 .todos/
+
+# Sidecar worktree state files
+.sidecar/
+.sidecar-agent
+.sidecar-task
+.sidecar-pr
+.sidecar-start.sh
+.sidecar-base
+.td-root
