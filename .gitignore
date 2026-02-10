@@ -8,3 +8,4 @@ hardware/*.kicad_prl
 
 # Python virtual environments
 scripts/.venv/
+.todos/
